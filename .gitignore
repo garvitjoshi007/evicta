@@ -1,0 +1,60 @@
+// ...existing code...
+evicta-venv/
+
+# Byte-compiled / caches
+__pycache__/
+__pycache__/*
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+venv.bak/
+ENV/
+env/
+env.bak/
+
+# Environment / secrets
+.env
+.env.*
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+pip-wheel-metadata/
+wheelhouse/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Test / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Type checkers / linters
+.mypy_cache/
+.pyre/
+.pytype/
+
+# IDEs / editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
