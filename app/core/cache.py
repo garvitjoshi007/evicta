@@ -42,9 +42,3 @@ def set_in_cache(prompt: str, response: str, ttl_seconds: int) -> None:
 
 def show_cache():
     return cache_store.cache_entries
-
-
-
-
-
-
