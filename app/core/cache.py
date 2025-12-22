@@ -40,6 +40,10 @@ def set_in_cache(prompt: str, response: str, ttl_seconds: int) -> None:
             oldest_entry_id = next(iter(cache_store.cache_entries.keys()))
             cache_store._evict_entry(oldest_entry_id) 
 
+def show_cache():
+    return cache_store.cache_entries
+
+
 
 
 
