@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from .core.cache import get_from_cache, set_in_cache, show_cache
+from .core.cache import get_from_cache, set_in_cache, show_cache, show_prompts_mapping, show_intents_mapping
 from .policies.ttl import get_ttl
 from .services.llm import generate_response
 
@@ -37,6 +37,14 @@ def ask(req: AskRequest):
 def health():
     return {"status": "ok"}
 
-@app.get("/show")
+@app.get("/showcache")
 def show():
     return show_cache()
+
+@app.get("/showprompts")
+def show():
+    return show_prompts_mapping()
+
+@app.get("/showintents")
+def show():
+    return show_intents_mapping()
