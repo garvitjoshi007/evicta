@@ -46,7 +46,7 @@ def main(args):
     print(f"Loaded {len(df)} rows from {args.input}")
 
     # Train / validation split
-    train_df, valid_df = train_test_split(df, test_size=0.15, random_state=42, stratify=df["intent"])
+    train_df, valid_df = train_test_split(df, test_size=0.20, random_state=42, stratify=df["intent"])
 
     X_train = train_df["text"].astype(str)
     y_train = train_df["intent"].astype(str)

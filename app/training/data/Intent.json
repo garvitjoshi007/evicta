@@ -977,6 +977,259 @@
                   },
                   "entityType": "NA",
                   "entities": []
+            },
+            {
+                  "intent": "DefineConcept",
+                  "text": [
+                        "What is artificial intelligence",
+                        "Define AI",
+                        "Explain artificial intelligence",
+                        "What does AI mean",
+                        "Meaning of machine learning",
+                        "Explain neural networks",
+                        "What is deep learning"
+                  ],
+                  "responses": [
+                        "Artificial intelligence is the simulation of human intelligence in machines.",
+                        "Machine learning is a subset of artificial intelligence focused on learning from data."
+                  ],
+                  "extension": {
+                        "function": "",
+                        "entities": false,
+                        "responses": []
+                  },
+                  "context": {
+                        "in": "",
+                        "out": "DefineConceptRequest",
+                        "clear": false
+                  },
+                  "entityType": "Concept",
+                  "entities": []
+            },
+            {
+                  "intent": "HowTo",
+                  "text": [
+                        "How to install python",
+                        "How do I use docker",
+                        "How to deploy a FastAPI app",
+                        "Steps to train a neural network",
+                        "How to setup redis",
+                        "How to build an API"
+                  ],
+                  "responses": [
+                        "You can install Python by downloading it from python.org.",
+                        "Docker can be installed using your system package manager."
+                  ],
+                  "extension": {
+                        "function": "",
+                        "entities": false,
+                        "responses": []
+                  },
+                  "context": {
+                        "in": "",
+                        "out": "HowToRequest",
+                        "clear": false
+                  },
+                  "entityType": "Procedure",
+                  "entities": []
+            },
+            {
+                  "intent": "WhyReason",
+                  "text": [
+                        "Why is the sky blue",
+                        "Why does code break",
+                        "Why does AI hallucinate",
+                        "Why is caching important",
+                        "Why do neural networks overfit"
+                  ],
+                  "responses": [
+                        "The sky appears blue due to Rayleigh scattering.",
+                        "Caching improves performance by reducing redundant computation."
+                  ],
+                  "extension": {
+                        "function": "",
+                        "entities": false,
+                        "responses": []
+                  },
+                  "context": {
+                        "in": "",
+                        "out": "WhyReasonRequest",
+                        "clear": false
+                  },
+                  "entityType": "Reason",
+                  "entities": []
+            },
+            {
+                  "intent": "CompareItems",
+                  "text": [
+                        "Python vs Java",
+                        "Compare Redis and Memcached",
+                        "Difference between AI and ML",
+                        "C++ vs Rust",
+                        "Docker vs Podman"
+                  ],
+                  "responses": [
+                        "Python emphasizes readability while Java emphasizes portability."
+                  ],
+                  "extension": {
+                        "function": "",
+                        "entities": false,
+                        "responses": []
+                  },
+                  "context": {
+                        "in": "",
+                        "out": "CompareItemsRequest",
+                        "clear": false
+                  },
+                  "entityType": "Comparison",
+                  "entities": []
+            },
+            {
+                  "intent": "ListFeatures",
+                  "text": [
+                        "Features of Python",
+                        "List benefits of caching",
+                        "Advantages of AI",
+                        "Uses of machine learning",
+                        "Applications of blockchain"
+                  ],
+                  "responses": [
+                        "Python features dynamic typing, garbage collection, and extensive libraries."
+                  ],
+                  "extension": {
+                        "function": "",
+                        "entities": false,
+                        "responses": []
+                  },
+                  "context": {
+                        "in": "",
+                        "out": "ListFeaturesRequest",
+                        "clear": false
+                  },
+                  "entityType": "List",
+                  "entities": []
+            },
+            {
+                  "intent": "WhatIsPerson",
+                  "text": [
+                        "Who is Elon Musk",
+                        "Who is Alan Turing",
+                        "Who invented the computer",
+                        "Who founded Google",
+                        "Who is Sam Altman"
+                  ],
+                  "responses": [
+                        "Alan Turing was a pioneer of computer science."
+                  ],
+                  "extension": {
+                        "function": "",
+                        "entities": false,
+                        "responses": []
+                  },
+                  "context": {
+                        "in": "",
+                        "out": "WhatIsPersonRequest",
+                        "clear": false
+                  },
+                  "entityType": "Person",
+                  "entities": []
+            },
+            {
+                  "intent": "WhenEvent",
+                  "text": [
+                        "When was Python created",
+                        "When did India get independence",
+                        "When was OpenAI founded",
+                        "When was Linux released"
+                  ],
+                  "responses": [
+                        "Python was first released in 1991."
+                  ],
+                  "extension": {
+                        "function": "",
+                        "entities": false,
+                        "responses": []
+                  },
+                  "context": {
+                        "in": "",
+                        "out": "WhenEventRequest",
+                        "clear": false
+                  },
+                  "entityType": "Date",
+                  "entities": []
+            },
+            {
+                  "intent": "SimpleFact",
+                  "text": [
+                        "Capital of India",
+                        "CEO of Google",
+                        "Founder of Apple",
+                        "Fastest land animal",
+                        "Tallest mountain"
+                  ],
+                  "responses": [
+                        "The capital of India is New Delhi."
+                  ],
+                  "extension": {
+                        "function": "",
+                        "entities": false,
+                        "responses": []
+                  },
+                  "context": {
+                        "in": "",
+                        "out": "SimpleFactRequest",
+                        "clear": false
+                  },
+                  "entityType": "Fact",
+                  "entities": []
+            },
+            {
+                  "intent": "ErrorFix",
+                  "text": [
+                        "Fix Python ImportError",
+                        "How to resolve segfault",
+                        "Docker build failed",
+                        "Pip install error"
+                  ],
+                  "responses": [
+                        "You can try reinstalling the package to fix ImportError."
+                  ],
+                  "extension": {
+                        "function": "",
+                        "entities": false,
+                        "responses": []
+                  },
+                  "context": {
+                        "in": "",
+                        "out": "ErrorFixRequest",
+                        "clear": false
+                  },
+                  "entityType": "Error",
+                  "entities": []
+            },
+            {
+                  "intent": "GenericQuestion",
+                  "text": [
+                        "Tell me something",
+                        "I have a question",
+                        "Can you help me",
+                        "Explain something"
+                  ],
+                  "responses": [
+                        "Sure, please tell me what you would like to know."
+                  ],
+                  "extension": {
+                        "function": "",
+                        "entities": false,
+                        "responses": []
+                  },
+                  "context": {
+                        "in": "",
+                        "out": "GenericQuestionRequest",
+                        "clear": false
+                  },
+                  "entityType": "NA",
+                  "entities": []
             }
       ]
 }
