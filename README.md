@@ -26,7 +26,7 @@ Evicta is built around three core principles:
 5. Multi-prompt → single-entry mapping
 6. Deterministic cache invariants
 
-## 🗺 Roadmap
+## Roadmap
 
 | Phase | Feature                                   | Status |
 |------:|-------------------------------------------|:------:|
