@@ -1,27 +1,27 @@
 # Evicta
 
-Evicta is an experimental cache system for AI inference workloads, designed to reuse LLM responses while managing freshness and eviction intelligently.
+Evicta is a correctness-first cache engine for AI inference workloads.
+It enables safe reuse of LLM responses while enforcing freshness, eviction, and lifecycle guarantees.
 
-The project is aimed to perform simple deterministic caching and progressively adds semantic similarity, soft TTLs, and AI-assisted staleness reasoning.
+Evicta is designed to be embedded inside applications (API servers, agents, workers) to reduce redundant model calls without risking incorrect cache hits.
 
-This is a learning and research-oriented project, not a production library.
+This project focuses on building strong cache invariants first, and progressively layering controlled semantic reuse, dynamic TTL reasoning, and AI-assisted staleness inspection.
 
-## Goals
-- Reduce redundant AI inference
-- Model cache staleness beyond fixed TTLs
-- Explore AI-assisted cache management safely
+# Why Evicta
 
-## Non-goals
-- Replacing Redis or existing cache systems
-- Fully autonomous decision-making
-- Solving general knowledge correctness
+Blind caching of AI responses is dangerous — incorrect reuse leads to silent data corruption and loss of trust.
 
-## Status
-Early development.
+Evicta is built around three core principles:
 
+• Identity over lookup — cached responses have stable identities independent of prompts
+• Correct eviction semantics — no dangling or stale references are ever served
+• Safe reuse before smart reuse — deterministic correctness first, semantic reuse later
 
-## To DO 
-1. Semantic caching (embedding-based reuse)
-2. Agentic TTL inspector (dynamic TTL assignment)
-3. Attack-resilience (prompt obfuscation & abuse cases)
-4. Metrics & observability (hit ratio, eviction rate)
+# Core Features
+
+1. Entry-ID based cache architecture
+2. Prompt normalization & Unicode-safe matching
+3. TTL-based freshness control
+4. LRU eviction with full referential cleanup
+5. Multi-prompt → single-entry mapping
+6. Deterministic cache invariants
