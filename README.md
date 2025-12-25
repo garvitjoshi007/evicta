@@ -1,15 +1,15 @@
 # Evicta
 
-Evicta is a correctness-first cache engine for AI inference workloads.
-It enables safe reuse of LLM responses while enforcing freshness, eviction, and lifecycle guarantees.
+Evicta is a cache engine built specifically for AI inference workloads.
+Its goal is to reuse model responses safely while preserving freshness, eviction order, and correctness guarantees.
 
-Evicta is designed to be embedded inside applications (API servers, agents, workers) to reduce redundant model calls without risking incorrect cache hits.
+Evicta is meant to be embedded directly inside applications such as API servers, background workers, and agent systems to reduce redundant model calls without risking incorrect cache hits.
 
-This project focuses on building strong cache invariants first, and progressively layering controlled semantic reuse, dynamic TTL reasoning, and AI-assisted staleness inspection.
+The project starts with strict cache invariants and a deterministic core, and then gradually adds controlled semantic reuse, dynamic TTL strategies, and experimental AI-assisted staleness reasoning.
 
 ## Why Evicta
 
-Blind caching of AI responses is dangerous — incorrect reuse leads to silent data corruption and loss of trust.
+Blind caching of AI responses is dangerous, incorrect reuse leads to silent data corruption and loss of trust.
 
 Evicta is built around three core principles:
 
