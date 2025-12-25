@@ -58,7 +58,7 @@ The system prioritizes microsecond-level access for cache hits, ensuring it can 
 ## 📊 Representative Results (Rule-Based Intent Engine)
 
 --- Evicta Benchmarks ---
-| Operation            | Description   |
+| Operation            | Latency   |
 |---------------------|----------------|
 | Exact cache hit          |   ~2.7 µs |
 | Intent cache hit          |  ~2.5 µs |
@@ -70,8 +70,11 @@ Evicta can optionally use a lightweight machine-learned intent classifier to imp
 
 When enabled, cache misses incur additional latency due to local model inference:
 
-Operation: Latency
-Cache miss (ML intent model): ~3–4 ms
+| Operation            | Latency   |
+|---------------------|----------------|
+| Exact cache hit          |   ~2-3 µs |
+| Intent cache hit          |  ~2-3 µs |
+| Cache miss (ML intent model) | ~3000–4000 µs |
 
 1. Cache hits remain microsecond-level
 2. Cache misses incur a small millisecond-level penalty
