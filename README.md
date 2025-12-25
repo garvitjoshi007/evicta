@@ -58,9 +58,11 @@ The system prioritizes microsecond-level access for cache hits, ensuring it can 
 ## 📊 Representative Results (Rule-Based Intent Engine)
 
 --- Evicta Benchmarks ---
-Exact cache hit                        : ~2.7 µs
-Intent cache hit                       : ~2.5 µs
-Cache miss (Rule based intent)         : ~5.2 µs
+| Operation            | Description   |
+|---------------------|----------------|
+| Exact cache hit          |   ~2.7 µs |
+| Intent cache hit          |  ~2.5 µs |
+| Cache miss (Rule based intent) | ~5.2 µs |
 
 ## ML-Based Intent Classifier (Optional)
 
