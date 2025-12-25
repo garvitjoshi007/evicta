@@ -43,7 +43,7 @@ def associate_intent_to_entry(intent: str, entry_id: int) -> None:
 
     # Add new mapping
     intent_to_entry_id[intent] = entry_id
-    entry_id_to_prompts[entry_id].add(intent)
+    entry_id_to_intents[entry_id].add(intent)
 
     
 def get_entry_id_by_prompt(prompt: str) -> int | None:

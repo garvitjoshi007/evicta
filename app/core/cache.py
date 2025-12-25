@@ -50,8 +50,8 @@ def set_in_cache(prompt: str, response: str, ttl_seconds: int) -> None:
     # register intent if it exists
     intent_key = intent.extract_intent(prompt)
     if intent_key:
-        cache_store.intent_to_entry_id[intent] = entry_id
-        cache_store.associate_intent_to_entry(intent, entry_id)
+        cache_store.intent_to_entry_id[intent_key] = entry_id
+        cache_store.associate_intent_to_entry(intent_key, entry_id)
 
     # enforce capacity limitations
     if len(cache_store.cache_entries) > cache_store.MAX_CACHE_SIZE:
