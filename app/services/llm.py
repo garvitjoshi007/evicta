@@ -41,7 +41,7 @@ def generate_response(prompt: str) -> str:
     """
     payload = {"model": "gemma:2b", "prompt": prompt, "stream": False}
 
-    response = requests.post(LLM_URL, json=payload, timeout=10)
+    response = requests.post(LLM_URL, json=payload, timeout=90)
     data = response.json()
     return data["response"]
 

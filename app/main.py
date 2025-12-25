@@ -21,7 +21,7 @@ from .core.cache import (get_from_cache, set_in_cache, show_cache,
 from .policies.ttl import get_ttl
 from .services.llm import generate_response
 
-app = FastAPI(title="AI Cache Phase 1")
+app = FastAPI(title="Evicta Phase 1")
 
 
 class AskRequest(BaseModel):
