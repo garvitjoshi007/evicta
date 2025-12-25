@@ -117,7 +117,7 @@ def set_in_cache(prompt: str, response: str, ttl_seconds: int) -> None:
     # enforce capacity limitations
     if len(cache_store.cache_entries) > cache_store.MAX_CACHE_SIZE:
         oldest_entry_id = next(iter(cache_store.cache_entries))
-        cache_store._evict_entry(oldest_entry_id)
+        cache_store.evict_entry(oldest_entry_id)
 
 
 def show_cache():
