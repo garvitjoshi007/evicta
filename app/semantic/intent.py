@@ -21,9 +21,18 @@ Example:
 import re
 
 INTENT_PATTERNS = [
-    ("DEFINE", r"(?:what is|what\'s)\s+(?P<subject>.+)$"),
-    ("DEFINE", r"define\s+(?P<subject>.+)$"),
-    ("EXPLAIN", r"explain\s+(?P<subject>.+)$"),
+    ("DefineConcept", r"(what is|what's|define|meaning of)\s+(?P<subject>.+)$"),
+    ("ExplainConcept", r"(explain\s)\s+(?P<subject>.+)$"),
+    ("DifferenceBetween", r"(difference between|compare|vs|versus)\s+(?P<a>.+?)\s+(and|vs|versus)\s+(?P<b>.+)$"),
+    ("HowToGuide", r"^(how to|steps to|guide to|procedure to)\s+(?P<subject>.+)$"),
+#    ("TroubleshootIssue", r"(?i)(error|not working|failed|exception|issue|problem)"),
+#    ("WriteCode", r"(?i)(write code|implement|function|class|algorithm|regex)"),
+#    ("DebugError", r"(?i)(traceback|exception|stack trace|segfault|panic)"),
+#    ("CreativeGeneration", r"(?i)(write a story|poem|caption|lyrics|dialogue)"),
+#    ("FindResource", r"(?i)(find|search|link|resource|course)"),
+    ("InstallSetup", r"(install|setup|configure|download)\s+(?P<subject>.+)$"),
+    ("ToolRecommendation", r"^(which|best|better|recommend|suggest)\s+(?P<subject>.+)$"),
+    ("SummarizeText", r"(summarize|rewrite|paraphrase|shorten|simplify|translate)\s+(?P<subject>.+)$"),
 ]
 
 
