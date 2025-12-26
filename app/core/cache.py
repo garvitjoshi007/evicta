@@ -17,7 +17,9 @@ import time
 import unicodedata
 
 from app.core import cache_store
-from app.semantic import intent
+from app.intent import rule_intent
+from app.types.cache_decision import CacheDecision, HitType
+from app.observability.events import emit
 
 
 def clean(prompt: str) -> str:
@@ -44,39 +46,76 @@ def clean(prompt: str) -> str:
     return " ".join(prompt.lower().split())
 
 
-def get_from_cache(prompt: str) -> str | None:
+def decide_cache(prompt: str) -> CacheDecision:
     """
-    Retrieve a cached response by prompt or intent.
+    Decide whether a prompt results in a cache hit or miss.
 
-    First normalizes the prompt and attempts a direct lookup. If that fails,
-    extracts the intent and tries an intent-based lookup. Associates the prompt
-    to the entry if found via intent matching.
-
-    Args:
-        prompt: The user prompt to look up.
-
-    Returns:
-        The cached response string if found, otherwise None.
+    This function performs ONLY decision logic.
+    It does NOT return the response text.
     """
     prompt = clean(prompt)
+    now = time.time()
 
     # 1. Exact match
-    hit = cache_store.get_entry_by_prompt(prompt)
-    if hit is not None:
-        return hit
+    entry_id = cache_store.get_entry_id_by_prompt(prompt)
+    if entry_id is not None:
+        entry = cache_store.cache_entries.get(entry_id)
+        if entry and now <= entry["expires_at"]:
+            cache_store.mru_update(entry_id)
+            ttl_remaining = entry["expires_at"] - now
+            return CacheDecision(
+                hit_type=HitType.EXACT,
+                entry_id=entry_id,
+                ttl_remaining=ttl_remaining,
+                confidence=1.0,
+            )
 
     # 2. Intent reuse
-    intent_key = intent.extract_intent(prompt)
-    if intent_key and should_try_intent(prompt):
-        entry_id = cache_store.intent_to_entry_id.get(intent_key)
-        if entry_id is not None:
-            entry = cache_store.cache_entries.get(entry_id)
-            if entry and time.time() <= entry["expires_at"]:
-                cache_store.mru_update(entry_id)
-                cache_store.associate_prompt_to_entry(prompt, entry_id)
-                return entry["response"]
+    if should_try_intent(prompt):
+        intent_key = rule_intent.extract_intent(prompt)
+        if intent_key:
+            entry_id = cache_store.intent_to_entry_id.get(intent_key)
+            if entry_id is not None:
+                entry = cache_store.cache_entries.get(entry_id)
+                if entry and now <= entry["expires_at"]:
+                    cache_store.mru_update(entry_id)
+                    cache_store.associate_prompt_to_entry(prompt, entry_id)
+                    ttl_remaining = entry["expires_at"] - now
+                    return CacheDecision(
+                        hit_type=HitType.INTENT,
+                        entry_id=entry_id,
+                        ttl_remaining=ttl_remaining,
+                        confidence=0.7,  # placeholder, rule-based
+                    )
 
-    return None
+    return CacheDecision(
+        hit_type=HitType.MISS,
+        entry_id=None,
+        ttl_remaining=0.0,
+        confidence=0.0,
+    )
+
+
+def get_from_cache(prompt: str) -> str | None:
+    """
+    Backward-compatible cache fetch API.
+    """
+    decision = decide_cache(prompt)
+    emit(
+        "CACHE_DECISION",
+        {
+            "hit_type": decision.hit_type.value,
+            "prompt": prompt,
+            "confidence": decision.confidence,
+            "ttl_remaining": round(decision.ttl_remaining, 2),
+        },
+    )
+
+    if decision.hit_type == HitType.MISS:
+        return None
+
+    entry = cache_store.cache_entries.get(decision.entry_id)
+    return entry["response"] if entry else None
 
 
 def set_in_cache(prompt: str, response: str, ttl_seconds: int) -> None:
@@ -103,20 +142,45 @@ def set_in_cache(prompt: str, response: str, ttl_seconds: int) -> None:
         cache_store.cache_entries[entry_id]["response"] = response
         cache_store.cache_entries[entry_id]["expires_at"] = time.time() + ttl_seconds
         cache_store.mru_update(entry_id)
+        emit(
+            "CACHE_WRITE",
+            {
+                "entry_id": entry_id,
+                "prompt": prompt,
+                "ttl_seconds": ttl_seconds,
+                "update": True,
+            },
+        )
         return
 
     # create new entry
     entry_id = cache_store.create_entry(response, ttl_seconds)
     cache_store.associate_prompt_to_entry(prompt, entry_id)
 
+    emit(
+        "CACHE_WRITE",
+        {
+            "entry_id": entry_id,
+            "prompt": prompt,
+            "ttl_seconds": ttl_seconds,
+        },
+    )
+
     # register intent if it exists
-    intent_key = intent.extract_intent(prompt)
+    intent_key = rule_intent.extract_intent(prompt)
     if intent_key and should_try_intent(prompt):
         cache_store.associate_intent_to_entry(intent_key, entry_id)
 
     # enforce capacity limitations
     if len(cache_store.cache_entries) > cache_store.MAX_CACHE_SIZE:
         oldest_entry_id = next(iter(cache_store.cache_entries))
+        emit(
+            "CACHE_EVICT",
+            {
+                "entry_id": oldest_entry_id,
+                "reason": "capacity",
+            },
+        )
         cache_store.evict_entry(oldest_entry_id)
 
 
