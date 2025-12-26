@@ -60,15 +60,27 @@ def decide_cache(prompt: str) -> CacheDecision:
     entry_id = cache_store.get_entry_id_by_prompt(prompt)
     if entry_id is not None:
         entry = cache_store.cache_entries.get(entry_id)
-        if entry and now <= entry["expires_at"]:
-            cache_store.mru_update(entry_id)
-            ttl_remaining = entry["expires_at"] - now
-            return CacheDecision(
-                hit_type=HitType.EXACT,
-                entry_id=entry_id,
-                ttl_remaining=ttl_remaining,
-                confidence=1.0,
-            )
+        if entry:
+            if now <= entry["expires_at"]:
+                cache_store.mru_update(entry_id)
+                ttl_remaining = entry["expires_at"] - now
+                return CacheDecision(
+                    hit_type=HitType.EXACT,
+                    entry_id=entry_id,
+                    ttl_remaining=ttl_remaining,
+                    confidence=1.0,
+                )
+            else:
+                emit(
+                    "CACHE_EXPIRE",
+                    {
+                        "entry_id": entry_id,
+                        "expired_at": time.ctime(float(entry["expires_at"])),
+                        "observed_at": time.ctime(float(now)),
+                    },
+                )
+                cache_store.evict_entry(entry_id)
+
 
     # 2. Intent reuse
     if should_try_intent(prompt):
@@ -77,16 +89,28 @@ def decide_cache(prompt: str) -> CacheDecision:
             entry_id = cache_store.intent_to_entry_id.get(intent_key)
             if entry_id is not None:
                 entry = cache_store.cache_entries.get(entry_id)
-                if entry and now <= entry["expires_at"]:
-                    cache_store.mru_update(entry_id)
-                    cache_store.associate_prompt_to_entry(prompt, entry_id)
-                    ttl_remaining = entry["expires_at"] - now
-                    return CacheDecision(
-                        hit_type=HitType.INTENT,
-                        entry_id=entry_id,
-                        ttl_remaining=ttl_remaining,
-                        confidence=0.7,  # placeholder, rule-based
-                    )
+                if entry:
+                    if now <= entry["expires_at"]:
+                        cache_store.mru_update(entry_id)
+                        cache_store.associate_prompt_to_entry(prompt, entry_id)
+                        ttl_remaining = entry["expires_at"] - now
+                        return CacheDecision(
+                            hit_type=HitType.INTENT,
+                            entry_id=entry_id,
+                            ttl_remaining=ttl_remaining,
+                            confidence=0.7,  # placeholder, rule-based
+                        )
+                
+                    else:
+                        emit(
+                            "CACHE_EXPIRE",
+                            {
+                                "entry_id": entry_id,
+                                "expired_at": time.ctime(float(entry["expires_at"])),
+                                "observed_at": time.ctime(float(now)),
+                            },
+                        )
+                        cache_store.evict_entry(entry_id)
 
     return CacheDecision(
         hit_type=HitType.MISS,
@@ -105,9 +129,15 @@ def get_from_cache(prompt: str) -> str | None:
         "CACHE_DECISION",
         {
             "hit_type": decision.hit_type.value,
+            "entry_id": decision.entry_id,
             "prompt": prompt,
             "confidence": decision.confidence,
             "ttl_remaining": round(decision.ttl_remaining, 2),
+            "risk": classify_risk(
+                decision.hit_type.value,
+                decision.confidence,
+                decision.ttl_remaining,
+            )
         },
     )
 
@@ -257,3 +287,12 @@ def should_try_intent(prompt: str) -> bool:
     if "\n" in prompt:
         return False
     return True
+
+def classify_risk(hit_type, confidence, ttl_remaining):
+    if hit_type == "exact":
+        return "none"
+    if confidence < 0.6:
+        return "high"
+    if ttl_remaining < 10:
+        return "medium"
+    return "low"

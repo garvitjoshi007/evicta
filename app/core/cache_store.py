@@ -19,6 +19,7 @@ Global State:
 """
 
 import time
+import uuid
 from collections import OrderedDict
 
 cache_entries = OrderedDict()  # authoritative -> Key: entry_id , Value: entry data
@@ -27,11 +28,10 @@ entry_id_to_prompts = {}  # for cleanups -> Key: entry_id , Value: set of prompt
 intent_to_entry_id = {}  # for intent mapping: Key: intent_key, Value: entry_id
 entry_id_to_intents = {}  # for cleanups -> Key: entry_id, Value: set of intents
 
-_NEXT_ENTRY_ID = 1
 MAX_CACHE_SIZE = 10
 
 
-def mru_update(entry_id: int) -> None:
+def mru_update(entry_id: str) -> None:
     """
     Update the most-recently-used position of a cache entry.
 
@@ -46,7 +46,7 @@ def mru_update(entry_id: int) -> None:
     cache_entries.move_to_end(entry_id)
 
 
-def create_entry(response: str, ttl_seconds: int) -> int:
+def create_entry(response: str, ttl_seconds: int) -> str:
     """
     Create a new cache entry and return its ID.
 
@@ -60,10 +60,7 @@ def create_entry(response: str, ttl_seconds: int) -> int:
     Returns:
         The newly created entry_id (int).
     """
-    # pylint: disable=global-statement
-    global _NEXT_ENTRY_ID
-    entry_id = _NEXT_ENTRY_ID
-    _NEXT_ENTRY_ID += 1
+    entry_id = uuid.uuid4().hex[:8]
     cache_entries[entry_id] = {
         "response": response,
         "expires_at": time.time() + ttl_seconds,
@@ -73,7 +70,7 @@ def create_entry(response: str, ttl_seconds: int) -> int:
     return entry_id
 
 
-def associate_prompt_to_entry(prompt: str, entry_id: int) -> None:
+def associate_prompt_to_entry(prompt: str, entry_id: str) -> None:
     """
     Associate a prompt to a cache entry.
 
@@ -97,7 +94,7 @@ def associate_prompt_to_entry(prompt: str, entry_id: int) -> None:
     entry_id_to_prompts[entry_id].add(prompt)
 
 
-def associate_intent_to_entry(intent: str, entry_id: int) -> None:
+def associate_intent_to_entry(intent: str, entry_id: str) -> None:
     """
     Associate an intent to a cache entry.
 
@@ -121,7 +118,7 @@ def associate_intent_to_entry(intent: str, entry_id: int) -> None:
     entry_id_to_intents[entry_id].add(intent)
 
 
-def get_entry_id_by_prompt(prompt: str) -> int | None:
+def get_entry_id_by_prompt(prompt: str) -> str | None:
     """
     Get the entry ID associated with a prompt.
 
@@ -167,7 +164,7 @@ def get_entry_by_prompt(prompt: str) -> str | None:
     return entry.get("response")
 
 
-def evict_entry(entry_id: int):
+def evict_entry(entry_id: str):
     """
     Remove a cache entry and all its associated prompt and intent mappings.
 
