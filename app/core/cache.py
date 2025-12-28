@@ -19,8 +19,8 @@ import unicodedata
 from app.core import cache_store
 from app.intent import rule_intent
 from app.types.cache_decision import CacheDecision, HitType
+from app.types.metrics import METRICS
 from app.observability.events import emit
-
 
 def clean(prompt: str) -> str:
     """
@@ -102,6 +102,7 @@ def decide_cache(prompt: str) -> CacheDecision:
                         )
                 
                     else:
+                        METRICS.cache_expired += 1
                         emit(
                             "CACHE_EXPIRE",
                             {
@@ -125,6 +126,7 @@ def get_from_cache(prompt: str) -> str | None:
     Backward-compatible cache fetch API.
     """
     decision = decide_cache(prompt)
+    METRICS.total_decisions += 1
     emit(
         "CACHE_DECISION",
         {
@@ -142,7 +144,14 @@ def get_from_cache(prompt: str) -> str | None:
     )
 
     if decision.hit_type == HitType.MISS:
+        METRICS.cache_misses += 1
         return None
+    
+    elif decision.hit_type == HitType.EXACT:
+        METRICS.exact_hits += 1
+
+    elif decision.hit_type == HitType.INTENT:
+        METRICS.intent_hits += 1
 
     entry = cache_store.cache_entries.get(decision.entry_id)
     return entry["response"] if entry else None
@@ -204,6 +213,7 @@ def set_in_cache(prompt: str, response: str, ttl_seconds: int) -> None:
     # enforce capacity limitations
     if len(cache_store.cache_entries) > cache_store.MAX_CACHE_SIZE:
         oldest_entry_id = next(iter(cache_store.cache_entries))
+        METRICS.cache_evicted += 1
         emit(
             "CACHE_EVICT",
             {

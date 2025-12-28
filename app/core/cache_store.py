@@ -28,7 +28,7 @@ entry_id_to_prompts = {}  # for cleanups -> Key: entry_id , Value: set of prompt
 intent_to_entry_id = {}  # for intent mapping: Key: intent_key, Value: entry_id
 entry_id_to_intents = {}  # for cleanups -> Key: entry_id, Value: set of intents
 
-MAX_CACHE_SIZE = 10
+MAX_CACHE_SIZE = 20
 
 
 def mru_update(entry_id: str) -> None:

@@ -20,6 +20,7 @@ from .core.cache import (get_from_cache, set_in_cache, show_cache,
                          show_intents_mapping, show_prompts_mapping)
 from .policies.ttl import get_ttl
 from .services.llm import generate_response
+from .types.metrics import METRICS
 
 app = FastAPI(title="Evicta Phase 1")
 
@@ -116,3 +117,15 @@ def showintents():
         A dict containing intent_to_entry_id and entry_id_to_intents mappings.
     """
     return show_intents_mapping()
+
+@app.get("/stats")
+def showstats():
+    """
+    Retrieve and display the current stats of the cache.
+
+    Returns:
+    stats: total_decisions, exact_hits, intent_hits, cache_misses, cache_expired, cache_evicted
+
+    """
+    
+    return METRICS.snapshot()

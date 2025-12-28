@@ -23,7 +23,7 @@ import re
 INTENT_PATTERNS = [
     ("DefineConcept", r"(what is|what's|define|meaning of)\s+(?P<subject>.+)$"),
     ("ExplainConcept", r"(explain)\s+(?P<subject>.+)$"),
-    ("DifferenceBetween", r"(difference between|compare|vs|versus)\s+(?P<a>.+?)\s+(and|vs|versus)\s+(?P<b>.+)$"),
+#    ("DifferenceBetween", r"(difference between|compare|vs|versus)\s+(?P<a>.+?)\s+(and|vs|versus)\s+(?P<b>.+)$"),
     ("HowToGuide", r"^(how to|steps to|guide to|procedure to)\s+(?P<subject>.+)$"),
 #    ("TroubleshootIssue", r"(?i)(error|not working|failed|exception|issue|problem)"),
 #    ("WriteCode", r"(?i)(write code|implement|function|class|algorithm|regex)"),
