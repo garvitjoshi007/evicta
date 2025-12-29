@@ -21,20 +21,52 @@ Example:
 import re
 
 INTENT_PATTERNS = [
-    ("DefineConcept", r"(what is|what's|define|meaning of)\s+(?P<subject>.+)$"),
-    ("ExplainConcept", r"(explain)\s+(?P<subject>.+)$"),
-#    ("DifferenceBetween", r"(difference between|compare|vs|versus)\s+(?P<a>.+?)\s+(and|vs|versus)\s+(?P<b>.+)$"),
-    ("HowToGuide", r"^(how to|steps to|guide to|procedure to)\s+(?P<subject>.+)$"),
-#    ("TroubleshootIssue", r"(?i)(error|not working|failed|exception|issue|problem)"),
-#    ("WriteCode", r"(?i)(write code|implement|function|class|algorithm|regex)"),
-#    ("DebugError", r"(?i)(traceback|exception|stack trace|segfault|panic)"),
-#    ("CreativeGeneration", r"(?i)(write a story|poem|caption|lyrics|dialogue)"),
-#    ("FindResource", r"(?i)(find|search|link|resource|course)"),
-    ("InstallSetup", r"(install|setup|configure|download)\s+(?P<subject>.+)$"),
-    ("ToolRecommendation", r"^(which|best|better|recommend|suggest)\s+(?P<subject>.+)$"),
-    ("SummarizeText", r"(summarize|rewrite|paraphrase|shorten|simplify|translate)\s+(?P<subject>.+)$"),
+    ("DefineConcept",
+     r"^(what is|what's|define|meaning of)\s+(?P<subject>.+)$"),
+
+    ("ExplainConcept",
+     r"^(explain)\s+(?P<subject>.+)$"),
+
+    ("DifferenceBetween",
+     r"^(difference between|compare)\s+(?P<a>.+?)\s+(and|vs|versus)\s+(?P<b>.+)$"),
+
+    ("HowToGuide",
+     r"^(how to|steps to|guide to|procedure to)\s+(?P<subject>.+)$"),
+
+    ("TroubleshootIssue", [
+        r"^(?P<subject>.+?)\s+(error|not working|failed|exception|issue|problem)$",
+        r"^(error|not working|failed|exception|issue|problem)\s+(?P<subject>.+)$",
+    ]),
+
+    ("WriteCode",
+     r"^(write code|write|implement)\s+(?P<subject>.+)$"),
+
+    ("DebugError",
+     r"^(?P<subject>traceback|stack trace|segfault|panic|exception)"
+     r"(?:\s+in\s+(?P<context>.+))?$"),
+
+    ("CreativeGeneration",
+     r"^(write|create)\s+(a\s+)?(?P<subject>story|poem|caption|lyrics|dialogue)"
+     r"(?:\s+about\s+(?P<context>.+))?$"),
+
+    ("FindResource",
+     r"^(find|search|link|resource|course)\s+(for\s+)?(?P<subject>.+)$"),
+
+    ("InstallSetup",
+     r"^(install|setup|configure|download)\s+(?P<subject>.+)$"),
+
+    ("ToolRecommendation",
+     r"^(which|best|better|recommend|suggest)\s+(?P<subject>.+)$"),
+
+    ("SummarizeText",
+     r"^(summarize|rewrite|paraphrase|shorten|simplify|translate)\s+(?P<subject>.+)$"),
 ]
 
+
+def canonical_pair(a: str, b: str) -> str:
+    a = " ".join(a.split())
+    b = " ".join(b.split())
+    return " ".join(sorted([a, b]))
 
 def extract_intent(prompt: str) -> str | None:
     """
@@ -66,17 +98,36 @@ def extract_intent(prompt: str) -> str | None:
     """
     text = prompt.lower().strip()
 
-    for intent, pattern in INTENT_PATTERNS:
-        match = re.match(pattern, text)
-        if not match:
-            continue
+    for intent, patterns in INTENT_PATTERNS:
+        if isinstance(patterns, str):
+            patterns = [patterns]
 
-        subject = match.group("subject").strip()
-        subject = " ".join(subject.split())
+        for pattern in patterns:
+            match = re.match(pattern, text)
+            if not match:
+                continue
 
-        return f"{intent}:{subject}"
+            g = match.groupdict()
+
+            if intent == "DifferenceBetween":
+                subject = canonical_pair(g["a"], g["b"])
+
+            elif intent == "DebugError":
+                subject = g["subject"]
+                if g.get("context"):
+                    subject += f" {g['context']}"
+
+            elif intent == "CreativeGeneration":
+                subject = g["subject"]
+                if g.get("context"):
+                    subject += f" about {g['context']}"
+
+            else:
+                subject = g.get("subject", "")
+
+            subject = " ".join(subject.split())
+            return f"{intent}:{subject}"
 
     return None
-
 
 # print(extract_intent("what is AI"))
