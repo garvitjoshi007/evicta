@@ -19,6 +19,7 @@ Example:
 """
 
 import re
+from app.types.cache_decision import IntentResult
 
 INTENT_PATTERNS = [
     ("DefineConcept",
@@ -63,12 +64,72 @@ INTENT_PATTERNS = [
 ]
 
 
+INTENT_BASE_CONFIDENCE = {
+    "DifferenceBetween": 0.95,
+    "InstallSetup": 0.90,
+    "HowToGuide": 0.88,
+    "DefineConcept": 0.85,
+    "ExplainConcept": 0.80,
+    "WriteCode": 0.85,
+    "DebugError": 0.90,
+    "TroubleshootIssue": 0.70,
+    "FindResource": 0.65,
+    "CreativeGeneration": 0.75,
+    "SummarizeText": 0.85,
+}
+
+NOISE_PATTERNS = {
+    "DefineConcept": [
+        r"\bmeaning\b",
+        r"\boverview\b",
+        r"\bbasics\b",
+        r"\bin simple terms\b",
+        r"\bwith example(s)?\b",
+    ],
+    "ExplainConcept": [
+        r"\bin simple terms\b",
+        r"\bwith example(s)?\b",
+    ],
+    "SummarizeText": [
+        r"\bin simple words\b",
+        r"\bshort\b",
+    ],
+    "InstallSetup": [
+        r"\bon ubuntu\b",
+        r"\bon linux\b",
+        r"\bon mac(os)?\b",
+        r"\bon windows\b",
+    ],
+}
+
+
+NOISE_PENALTY = 0.05
+
+def normalize_subject(intent:str,subject:str) -> tuple[str,bool]:
+    """
+    Returns (normalized_subject, noise_removed)
+    """
+
+    noise_removed = False
+    patterns = NOISE_PATTERNS.get(intent, [])
+
+    for pat in patterns:
+        new_subject, count = re.subn(pat,"",subject)
+        if count > 0:
+            noise_removed = True
+            subject = new_subject
+
+    subject = " ".join(subject.split())
+    return subject, noise_removed
+        
+
+
 def canonical_pair(a: str, b: str) -> str:
     a = " ".join(a.split())
     b = " ".join(b.split())
     return " ".join(sorted([a, b]))
 
-def extract_intent(prompt: str) -> str | None:
+def extract_intent(prompt: str) -> IntentResult | None:
     """
     Extract a normalized intent key from a user prompt.
 
@@ -126,8 +187,49 @@ def extract_intent(prompt: str) -> str | None:
                 subject = g.get("subject", "")
 
             subject = " ".join(subject.split())
-            return f"{intent}:{subject}"
+            subject, noise_removed = normalize_subject(intent, subject)
+
+            confidence = compute_confidence(intent=intent,subject=subject,pattern=pattern,noise_removed=noise_removed)
+            return IntentResult(
+                intent=intent,
+                subject=subject,
+                confidence=confidence,
+                source="rule"
+            )
 
     return None
+
+
+def subject_specificity(subject: str) -> float:
+    tokens = subject.split()
+    n = len(tokens)
+
+    generic_subjects = {"it", "this", "that", "something", "error", "issue"}
+
+    if subject in generic_subjects:
+        return 0.4
+
+    return min(1.0, 0.6+(0.1*n))
+
+
+def pattern_strength(pattern:str):
+    if len(pattern) > 70:
+        return 1.0
+    if len(pattern) > 40:
+        return 0.9
+    return 0.8
+
+
+def compute_confidence(intent, subject, pattern, noise_removed):
+    score = INTENT_BASE_CONFIDENCE.get(intent, 0.7)
+
+    score *= subject_specificity(subject)
+    score *= pattern_strength(pattern)
+
+    if noise_removed:
+        score -= NOISE_PENALTY
+
+    return round(max(0.0, min(score, 1.0)), 2)
+    
 
 # print(extract_intent("what is AI"))

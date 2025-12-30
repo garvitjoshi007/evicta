@@ -22,6 +22,9 @@ from app.types.cache_decision import CacheDecision, HitType
 from app.types.metrics import METRICS
 from app.observability.events import emit
 
+INTENT_REUSE_THRESHOLD = 0.6
+EMBEDDING_THRESHOLD = 0.4
+
 def clean(prompt: str) -> str:
     """
     Normalize a user prompt for consistent cache lookups.
@@ -82,36 +85,40 @@ def decide_cache(prompt: str) -> CacheDecision:
                 cache_store.evict_entry(entry_id)
 
 
-    # 2. Intent reuse
+    # 2. Intent / Embedding reuse
+    intent_result = None
     if should_try_intent(prompt):
-        intent_key = rule_intent.extract_intent(prompt)
-        if intent_key:
+        intent_result = rule_intent.extract_intent(prompt)
+
+    if intent_result:
+        intent_key = f"{intent_result.intent}:{intent_result.subject}"
+
+        # Tier 1: Intent reuse (high confidence)
+        if intent_result.confidence >= INTENT_REUSE_THRESHOLD:
             entry_id = cache_store.intent_to_entry_id.get(intent_key)
             if entry_id is not None:
                 entry = cache_store.cache_entries.get(entry_id)
-                if entry:
-                    if now <= entry["expires_at"]:
-                        cache_store.mru_update(entry_id)
-                        cache_store.associate_prompt_to_entry(prompt, entry_id)
-                        ttl_remaining = entry["expires_at"] - now
-                        return CacheDecision(
-                            hit_type=HitType.INTENT,
-                            entry_id=entry_id,
-                            ttl_remaining=ttl_remaining,
-                            confidence=0.7,  # placeholder, rule-based
-                        )
-                
-                    else:
-                        METRICS.cache_expired += 1
-                        emit(
-                            "CACHE_EXPIRE",
-                            {
-                                "entry_id": entry_id,
-                                "expired_at": time.ctime(float(entry["expires_at"])),
-                                "observed_at": time.ctime(float(now)),
-                            },
-                        )
-                        cache_store.evict_entry(entry_id)
+                if entry and now <= entry["expires_at"]:
+                    cache_store.mru_update(entry_id)
+                    cache_store.associate_prompt_to_entry(prompt, entry_id)
+                    ttl_remaining = entry["expires_at"] - now
+                    return CacheDecision(
+                        hit_type=HitType.INTENT,
+                        entry_id=entry_id,
+                        ttl_remaining=ttl_remaining,
+                        confidence=intent_result.confidence,
+                    )
+
+        # Tier 2: Embedding fallback (medium confidence)
+        if (intent_result.confidence >= EMBEDDING_THRESHOLD and intent_result.confidence < INTENT_REUSE_THRESHOLD):
+            emit(
+                "EMBEDDING_CANDIDATE",
+                {
+                    "prompt": prompt,
+                    "intent": intent_result.intent,
+                    "confidence": intent_result.confidence,
+                },
+            )
 
     return CacheDecision(
         hit_type=HitType.MISS,
@@ -206,9 +213,12 @@ def set_in_cache(prompt: str, response: str, ttl_seconds: int) -> None:
     )
 
     # register intent if it exists
-    intent_key = rule_intent.extract_intent(prompt)
-    if intent_key and should_try_intent(prompt):
+    intent_result = rule_intent.extract_intent(prompt)
+    if intent_result and intent_result.confidence >= INTENT_REUSE_THRESHOLD:
+        intent_key = f"{intent_result.intent}:{intent_result.subject}"
         cache_store.associate_intent_to_entry(intent_key, entry_id)
+    if not intent_result:
+        return
 
     # enforce capacity limitations
     if len(cache_store.cache_entries) > cache_store.MAX_CACHE_SIZE:

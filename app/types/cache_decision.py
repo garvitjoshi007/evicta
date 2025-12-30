@@ -13,3 +13,10 @@ class CacheDecision:
     entry_id: str | None
     ttl_remaining: float
     confidence: float
+
+@dataclass
+class IntentResult:
+    intent: str
+    subject: str
+    confidence: float
+    source: str # rule or model
